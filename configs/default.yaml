@@ -1,0 +1,63 @@
+seed: 0
+timezone: Europe/Berlin
+# Forecast issue time: local hour on day D. Forecast covers the 24 hours of day D+1.
+issue_hour_local: 10
+data_start: "2015-01-01"
+splits:
+  train_end: "2022-12-31"
+  val_end: "2023-12-31"
+  test_start: "2024-01-01"
+paths:
+  raw: data/raw
+  processed: data/processed
+  artifacts: artifacts
+  results: results
+  logs: logs
+smard:
+  base_url: https://www.smard.de/app/chart_data
+  delay_s: 0.15
+  refetch_recent_days: 14
+openmeteo:
+  archive_url: https://archive-api.open-meteo.com/v1/archive
+  hist_forecast_url: https://historical-forecast-api.open-meteo.com/v1/forecast
+  forecast_url: https://api.open-meteo.com/v1/forecast
+  delay_s: 1.0
+  variables:
+    - temperature_2m
+    - apparent_temperature
+    - relative_humidity_2m
+    - cloud_cover
+    - shortwave_radiation
+    - wind_speed_10m
+    - wind_speed_100m
+    - precipitation
+quality:
+  max_interp_gap_h: 3
+  outlier_z: 8.0
+features:
+  hdd_base_c: 15.0
+  cdd_base_c: 22.0
+lstm:
+  lookback: 168
+  hidden: 64
+  layers: 1
+  dropout: 0.1
+  lr: 0.002
+  weight_decay: 0.0001
+  batch_size: 256
+  max_epochs: 40
+  patience: 5
+  clip: 1.0
+  quantiles: [0.1, 0.5, 0.9]
+  stride_train: 1
+gbm:
+  n_estimators: 600
+  learning_rate: 0.05
+  num_leaves: 63
+  min_child_samples: 40
+  subsample: 0.8
+  colsample_bytree: 0.8
+parallel:
+  workers: 4
+  threads_per_worker: 1
+  memory_limit: "1100MB"

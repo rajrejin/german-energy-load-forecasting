@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energy-forecaster"
+version = "0.1.0"
+description = "Day-ahead electricity demand forecasting for the German TSO control areas"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy", "pandas", "pyarrow", "scipy", "scikit-learn", "statsmodels", "statsforecast",
+  "lightgbm", "torch", "shap", "dask[distributed]", "holidays", "httpx", "tenacity",
+  "pydantic", "pydantic-settings", "pyyaml", "typer", "fastapi", "uvicorn",
+  "prometheus-client", "streamlit", "plotly", "matplotlib", "azure-storage-blob",
+  "azure-identity", "ollama", "psutil",
+]
+
+[project.scripts]
+energy = "energy.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src", "."]
+include = ["energy*", "api*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "api", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = ["B008", "E501"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = false
+check_untyped_defs = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --cov=src/energy --cov=api --cov-report=term-missing:skip-covered --cov-fail-under=80"
+markers = ["integration: needs real cached data or external services"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning", "ignore::UserWarning"]
+
+[tool.coverage.run]
+omit = ["src/energy/cli.py"]

@@ -1,0 +1,50 @@
+# Local stack: API, Streamlit app, Azurite (Azure Blob emulator). Run from the repo root:
+#   docker compose -f docker/docker-compose.yml up --build
+# Publish models and forecasts into Azurite first (see README, "Docker").
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.33.0
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+    ports: ["10000:10000"]
+    volumes: ["azurite-data:/data"]
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "10000"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    environment:
+      ENERGY_STORE: azure
+      ENERGY_CONTAINER: energy
+      ENERGY_AZURE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      ENERGY_API_KEY: "${ENERGY_API_KEY:-}"
+    ports: ["8000:8000"]
+    depends_on: [azurite]
+    mem_limit: 512m
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.app
+    environment:
+      ENERGY_API_URL: http://api:8000
+      ENERGY_API_KEY: "${ENERGY_API_KEY:-}"
+    ports: ["8501:8501"]
+    depends_on: [api]
+    mem_limit: 512m
+
+  # Optional Dask scheduler for distributed training experiments: --profile dask
+  dask-scheduler:
+    image: ghcr.io/dask/dask:2026.8.0-py3.11
+    command: dask scheduler
+    profiles: ["dask"]
+    ports: ["8786:8786"]
+    mem_limit: 512m
+
+volumes:
+  azurite-data: {}

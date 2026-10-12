@@ -1,0 +1,13 @@
+{
+  "zone": "DE",
+  "criterion": "val pinball (lstm) / val MAE (lightgbm)",
+  "trial": 0,
+  "params": {
+    "num_leaves": 127.0,
+    "learning_rate": 0.05,
+    "min_child_samples": 40.0,
+    "subsample": 0.6,
+    "colsample_bytree": 0.6,
+    "n_estimators": 1500.0
+  }
+}

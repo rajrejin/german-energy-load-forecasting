@@ -1,0 +1,25 @@
+# syntax=docker/dockerfile:1
+# API image: reads published forecasts from the artifact store. No torch, no data, no models.
+FROM python:3.11.9-slim-bookworm AS build
+WORKDIR /src
+ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+COPY docker/requirements-api.txt .
+RUN python -m venv /opt/venv && /opt/venv/bin/pip install -r requirements-api.txt
+COPY pyproject.toml ./
+COPY src ./src
+COPY api ./api
+COPY configs ./configs
+RUN /opt/venv/bin/pip install --no-deps .
+
+FROM python:3.11.9-slim-bookworm AS runtime
+RUN useradd --create-home --uid 10001 appuser
+COPY --from=build /opt/venv /opt/venv
+COPY --from=build /src/api /app/api
+COPY --from=build /src/configs /app/configs
+WORKDIR /app
+ENV PATH=/opt/venv/bin:$PATH PYTHONUNBUFFERED=1 ENERGY_ROOT=/app
+USER appuser
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/v1/health', timeout=4).status==200 else 1)"
+CMD ["uvicorn", "api.main:get_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

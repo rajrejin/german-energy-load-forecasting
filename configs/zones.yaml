@@ -1,0 +1,43 @@
+# Population-weighted weather points per control area and state shares for holidays.
+# Populations are APPROXIMATE city populations (rounded, thousands; source: Destatis
+# city population tables, order of magnitude only). State population shares per zone are
+# APPROXIMATE (control area borders do not follow state borders). Both are a documented
+# limitation, see docs/DECISIONS.md.
+zones:
+  50Hertz:
+    smard_region: 50Hertz
+    points:
+      - {name: Berlin, lat: 52.52, lon: 13.405, pop: 3750}
+      - {name: Hamburg, lat: 53.551, lon: 9.994, pop: 1850}
+      - {name: Leipzig, lat: 51.340, lon: 12.375, pop: 620}
+      - {name: Dresden, lat: 51.050, lon: 13.738, pop: 560}
+      - {name: Rostock, lat: 54.092, lon: 12.099, pop: 210}
+    states: {BE: 3.7, HH: 1.9, BB: 2.6, MV: 1.6, SN: 4.1, ST: 2.2, TH: 2.1}
+  Amprion:
+    smard_region: Amprion
+    points:
+      - {name: Cologne, lat: 50.938, lon: 6.960, pop: 1080}
+      - {name: Dortmund, lat: 51.514, lon: 7.468, pop: 590}
+      - {name: Essen, lat: 51.455, lon: 7.012, pop: 580}
+      - {name: Frankfurt, lat: 50.110, lon: 8.682, pop: 760}
+      - {name: Mainz, lat: 49.992, lon: 8.247, pop: 220}
+    states: {NW: 18.0, RP: 4.1, HE: 4.7, SL: 1.0}
+  TenneT:
+    smard_region: TenneT
+    points:
+      - {name: Munich, lat: 48.137, lon: 11.575, pop: 1510}
+      - {name: Hannover, lat: 52.375, lon: 9.732, pop: 540}
+      - {name: Nuremberg, lat: 49.452, lon: 11.077, pop: 520}
+      - {name: Bremen, lat: 53.079, lon: 8.802, pop: 570}
+      - {name: Kiel, lat: 54.323, lon: 10.122, pop: 250}
+    states: {BY: 13.2, NI: 8.0, SH: 2.9, HB: 0.7, HE: 1.5}
+  TransnetBW:
+    smard_region: TransnetBW
+    points:
+      - {name: Stuttgart, lat: 48.775, lon: 9.182, pop: 630}
+      - {name: Karlsruhe, lat: 49.007, lon: 8.404, pop: 310}
+      - {name: Mannheim, lat: 49.489, lon: 8.467, pop: 310}
+    states: {BW: 11.3}
+national:
+  smard_region: DE
+  # National weather = mean of zone weather weighted by training-period mean zone load.
