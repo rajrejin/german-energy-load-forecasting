@@ -94,6 +94,43 @@ def publish_models_cmd(store: str = typer.Option("local")) -> None:
     typer.echo(f"published models for {done}")
 
 
+@app.command("publish-results")
+def publish_results(store: str = typer.Option("local")) -> None:
+    """Upload the result tables the dashboard shows (CSV and JSON from results/) to the store."""
+    from energy.config import load_config
+    from energy.serving.settings import store_from_env
+
+    cfg = load_config()
+    st = store_from_env(store)
+    names = [
+        "ladder.csv",
+        "by_hour.csv",
+        "ablations.csv",
+        "significance.csv",
+        "seed_spread.csv",
+        "breakdowns.csv",
+        "external_benchmark.csv",
+        "data_quality.json",
+        "explain_sanity.json",
+        "parallel_timing.json",
+        "briefing_eval.json",
+    ]
+    for n in names:
+        p = cfg.path("results") / n
+        if p.exists():
+            st.put_bytes(f"results/{n}", p.read_bytes())
+            typer.echo(f"published {n}")
+
+
+@app.command()
+def env() -> None:
+    """Write results/environment.json and results/runtime.json."""
+    from energy.environment import write_environment, write_runtime
+
+    write_environment()
+    write_runtime()
+
+
 @app.command("serve-api")
 def serve_api(host: str = "127.0.0.1", port: int = 8000) -> None:
     """Run the FastAPI service."""

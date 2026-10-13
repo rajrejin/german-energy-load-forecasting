@@ -79,5 +79,5 @@ def quantile_metrics(
     if lo in qs and hi in qs:
         out["coverage_80"] = coverage(y, qs[lo], qs[hi])
         out["width_80"] = interval_width(qs[lo], qs[hi])
-        out["winkler_like_crossing_rate"] = float(np.nanmean(qs[lo] > qs[hi]))
+        out["crossing_rate"] = float(np.nanmean(qs[lo] > qs[hi]))
     return out

@@ -1,0 +1,263 @@
+{
+  "week_start": "2026-10-05",
+  "facts": {
+    "week_start": "2026-10-05",
+    "week_end": "2026-10-11",
+    "zones": {
+      "DE": {
+        "zone": "DE",
+        "n_days": 7,
+        "week_start": "2026-10-05",
+        "week_end": "2026-10-11",
+        "expected_peak_mw": 66096.0,
+        "peak_date": "2026-10-08",
+        "peak_hour_local": 11,
+        "energy_gwh": 8999.7,
+        "mean_interval_width_mw": 3695.0,
+        "quality_flags": [],
+        "peak_day_index": 3,
+        "peak_hour_index": 11,
+        "previous_week_energy_gwh": 8566.2,
+        "energy_change_pct": 5.1,
+        "previous_week_peak_mw": 62751.0,
+        "peak_hour_drivers": [
+          {
+            "driver": "weekday or weekend",
+            "attribution_mw": 3123.0
+          },
+          {
+            "driver": "recent load history",
+            "attribution_mw": -2920.0
+          },
+          {
+            "driver": "load at the same hour on the latest observed day",
+            "attribution_mw": -1115.0
+          }
+        ]
+      },
+      "50Hertz": {
+        "zone": "50Hertz",
+        "n_days": 7,
+        "week_start": "2026-10-05",
+        "week_end": "2026-10-11",
+        "expected_peak_mw": 13994.0,
+        "peak_date": "2026-10-08",
+        "peak_hour_local": 18,
+        "energy_gwh": 1897.8,
+        "mean_interval_width_mw": 1497.0,
+        "quality_flags": [],
+        "peak_day_index": 3,
+        "peak_hour_index": 18,
+        "previous_week_energy_gwh": 1839.2,
+        "energy_change_pct": 3.2,
+        "previous_week_peak_mw": 13315.0,
+        "peak_hour_drivers": [
+          {
+            "driver": "forecast wind speed 100m",
+            "attribution_mw": 399.0
+          },
+          {
+            "driver": "weekday or weekend",
+            "attribution_mw": 296.0
+          },
+          {
+            "driver": "weekday pattern (history)",
+            "attribution_mw": -245.0
+          }
+        ]
+      },
+      "Amprion": {
+        "zone": "Amprion",
+        "n_days": 7,
+        "week_start": "2026-10-05",
+        "week_end": "2026-10-11",
+        "expected_peak_mw": 23459.0,
+        "peak_date": "2026-10-08",
+        "peak_hour_local": 11,
+        "energy_gwh": 3230.7,
+        "mean_interval_width_mw": 1547.0,
+        "quality_flags": [],
+        "peak_day_index": 3,
+        "peak_hour_index": 11,
+        "previous_week_energy_gwh": 3100.0,
+        "energy_change_pct": 4.2,
+        "previous_week_peak_mw": 22872.0,
+        "peak_hour_drivers": [
+          {
+            "driver": "recent load history",
+            "attribution_mw": -1031.0
+          },
+          {
+            "driver": "weekday or weekend",
+            "attribution_mw": 729.0
+          },
+          {
+            "driver": "load at the same hour on the latest observed day",
+            "attribution_mw": -522.0
+          }
+        ]
+      },
+      "TenneT": {
+        "zone": "TenneT",
+        "n_days": 7,
+        "week_start": "2026-10-05",
+        "week_end": "2026-10-11",
+        "expected_peak_mw": 20635.0,
+        "peak_date": "2026-10-08",
+        "peak_hour_local": 11,
+        "energy_gwh": 2759.3,
+        "mean_interval_width_mw": 1204.0,
+        "quality_flags": [],
+        "peak_day_index": 3,
+        "peak_hour_index": 11,
+        "previous_week_energy_gwh": 2591.1,
+        "energy_change_pct": 6.5,
+        "previous_week_peak_mw": 19275.0,
+        "peak_hour_drivers": [
+          {
+            "driver": "weekday or weekend",
+            "attribution_mw": 500.0
+          },
+          {
+            "driver": "recent load history",
+            "attribution_mw": -314.0
+          },
+          {
+            "driver": "load at the same hour on the latest observed day",
+            "attribution_mw": -298.0
+          }
+        ]
+      },
+      "TransnetBW": {
+        "zone": "TransnetBW",
+        "n_days": 7,
+        "week_start": "2026-10-05",
+        "week_end": "2026-10-11",
+        "expected_peak_mw": 8578.0,
+        "peak_date": "2026-10-05",
+        "peak_hour_local": 10,
+        "energy_gwh": 1096.2,
+        "mean_interval_width_mw": 436.0,
+        "quality_flags": [],
+        "peak_day_index": 0,
+        "peak_hour_index": 10,
+        "previous_week_energy_gwh": 1070.7,
+        "energy_change_pct": 2.4,
+        "previous_week_peak_mw": 8408.0,
+        "peak_hour_drivers": [
+          {
+            "driver": "weekday or weekend",
+            "attribution_mw": 864.0
+          },
+          {
+            "driver": "recent load history",
+            "attribution_mw": -472.0
+          },
+          {
+            "driver": "weekday pattern (history)",
+            "attribution_mw": 424.0
+          }
+        ]
+      }
+    },
+    "interval_level_pct": 80,
+    "units": {
+      "expected_peak_mw": "MW",
+      "energy_gwh": "GWh",
+      "attribution_mw": "MW"
+    },
+    "note": "Forecast values from the model; drivers explain the model, not physical causes."
+  },
+  "briefing": {
+    "headline": "Weekly Electricity Demand Forecast: Week Ahead",
+    "zones": {
+      "DE": [
+        "(1) Expected peak: 66096.0 MW on 2026-10-08 at 11:00 local time.",
+        "(2) Expected energy: 8999.7 GWh, a 5.1% increase from the previous week.",
+        "(3) Mean interval width: 3695.0 MW, peak-hour drivers: weekday or weekend driver at 3123.0 MW, recent load history driver at -2920.0 MW, load at the same hour on the latest observed day driver at -1115.0 MW."
+      ],
+      "50Hertz": [
+        "(1) expected peak: 13994.0 MW on 2026-10-08 at 18:00",
+        "(2) expected energy: 1897.8 GWh, +3.2% from previous week",
+        "(3) mean interval width: 1497.0 MW, peak-hour drivers: forecast wind speed 100m (399.0 MW), weekday or weekend (296.0 MW), weekday pattern (history) (-245.0 MW)"
+      ],
+      "Amprion": [
+        "(1) expected peak: 23459.0 MW on 2026-10-08 at 11:00 local",
+        "(2) expected energy: 3230.7 GWh, a change of 4.2% from the previous week",
+        "(3) mean interval width: 1547.0 MW, peak-hour drivers: recent load history -1031.0 MW, weekday or weekend 729.0 MW, load at the same hour on the latest observed day -522.0 MW"
+      ],
+      "TenneT": [
+        "(1) expected peak: 20635.0 MW on 2026-10-08 at 11:00 local",
+        "(2) expected energy: 2759.3 GWh, a change of 6.5% from the previous week",
+        "(3) mean interval width: 1204.0 MW, peak-hour drivers: weekday or weekend - 500.0 MW, recent load history - -314.0 MW, load at the same hour on the latest observed day - -298.0 MW"
+      ],
+      "TransnetBW": [
+        "(1) Expected peak: 8578.0 MW on 2026-10-05 at 10:00 local time.",
+        "(2) Expected energy: 1096.2 GWh, a 2.4% increase from the previous week.",
+        "(3) Mean interval width: 436.0 MW, peak-hour drivers: weekday or weekend (864.0 MW), recent load history (-472.0 MW), weekday pattern (history) (424.0 MW)."
+      ]
+    },
+    "risks": [
+      "DE with the largest expected peak of 66096.0 MW",
+      "TenneT with the highest energy change of 6.5%"
+    ],
+    "attention": [
+      "Amprion with the highest expected peak of 23459.0 MW",
+      "50Hertz with the highest energy of 1897.8 GWh"
+    ],
+    "fallback_template": false
+  },
+  "info": {
+    "backend": "llama-cpp-python",
+    "attempts": 6,
+    "sections": {
+      "DE": {
+        "attempts": 1,
+        "problems": [
+          []
+        ],
+        "passed_first_attempt": true
+      },
+      "50Hertz": {
+        "attempts": 1,
+        "problems": [
+          []
+        ],
+        "passed_first_attempt": true
+      },
+      "Amprion": {
+        "attempts": 1,
+        "problems": [
+          []
+        ],
+        "passed_first_attempt": true
+      },
+      "TenneT": {
+        "attempts": 1,
+        "problems": [
+          []
+        ],
+        "passed_first_attempt": true
+      },
+      "TransnetBW": {
+        "attempts": 1,
+        "problems": [
+          []
+        ],
+        "passed_first_attempt": true
+      },
+      "overview": {
+        "attempts": 1,
+        "problems": [
+          []
+        ],
+        "passed_first_attempt": true
+      }
+    },
+    "fallback_sections": [],
+    "fallback": false,
+    "passed_first_attempt": true,
+    "seconds": 268.6176509857178,
+    "final_problems": []
+  }
+}

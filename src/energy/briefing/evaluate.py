@@ -70,6 +70,13 @@ def quality_flags(ctx: Context, days: list[DayForecast]) -> list[str]:
     return flags
 
 
+def available_weeks(cfg: Config, split: str = "test", regime: str = "archived") -> list[str]:
+    """Mondays with two complete weeks of forecasts in every region."""
+    ctxs = {z: make_context(z, cfg) for z in ALL_REGIONS}
+    days = [set(_days_from_preds(ctxs[z], regime, split, cfg)) for z in ALL_REGIONS]
+    return week_starts(sorted(set.intersection(*days)))
+
+
 def weekly_facts_from_backtest(
     cfg: Config | None = None,
     split: str = "test",
@@ -167,10 +174,12 @@ def evaluate_briefings(
     regime: str = "archived",
 ) -> dict[str, Any]:
     cfg = cfg or load_config()
-    facts_list = weekly_facts_from_backtest(cfg, split, regime)
-    if n_weeks is not None and n_weeks < len(facts_list):
-        idx = np.linspace(0, len(facts_list) - 1, n_weeks).round().astype(int)
-        facts_list = [facts_list[i] for i in idx]
+    all_weeks = available_weeks(cfg, split, regime)
+    chosen = all_weeks
+    if n_weeks is not None and n_weeks < len(all_weeks):
+        idx = np.linspace(0, len(all_weeks) - 1, n_weeks).round().astype(int)
+        chosen = [all_weeks[i] for i in idx]
+    facts_list = weekly_facts_from_backtest(cfg, split, regime, weeks=chosen)
     rows = []
     details = []
     for facts in facts_list:
@@ -226,7 +235,7 @@ def publish_briefing(
     payload = {
         **b.model_dump(),
         "facts": facts,
-        "generation": {k: v for k, v in info.items() if k != "problems_by_attempt"},
+        "generation": {k: v for k, v in info.items() if k not in ("sections", "final_problems")},
         "created_utc": pd.Timestamp.now(tz="UTC").isoformat(),
     }
     store.put_json("briefing/latest.json", payload)

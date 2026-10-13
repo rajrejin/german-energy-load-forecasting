@@ -79,7 +79,9 @@ def collect_strings(b: dict[str, Any]) -> list[str]:
     return out
 
 
-def verify(briefing: dict[str, Any], facts: dict[str, Any]) -> list[str]:
+def verify(
+    briefing: dict[str, Any], facts: dict[str, Any], require_all_zones: bool = True
+) -> list[str]:
     """Return a list of problems (empty when the briefing passes)."""
     problems: list[str] = []
     allowed = allowed_values(facts)
@@ -103,7 +105,7 @@ def verify(briefing: dict[str, Any], facts: dict[str, Any]) -> list[str]:
         if lab in text_all and not any(lab in d or d in lab for d in driver_labels):
             problems.append(f"driver '{lab}' is named but is not among the provided drivers")
     # every zone in the facts must be covered
-    for z in zones_in_facts:
+    for z in zones_in_facts if require_all_zones else []:
         if z not in briefing.get("zones", {}):
             problems.append(f"zone '{z}' is missing from the briefing")
     return sorted(set(problems))

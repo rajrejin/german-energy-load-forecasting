@@ -1,0 +1,21 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu": "AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx",
+  "logical_cpus": 8,
+  "physical_cpus": 4,
+  "ram_gb": 6.94,
+  "gpu_available": false,
+  "torch_threads_default": 4,
+  "libraries": {
+    "python": "3.13.14",
+    "numpy": "2.3.5",
+    "pandas": "2.3.3",
+    "torch": "2.14.1+cpu",
+    "lightgbm": "4.6.0",
+    "statsforecast": "2.1.1",
+    "shap": "0.48.0",
+    "scikit-learn": "1.7.2"
+  },
+  "seed": 0,
+  "config_hash": "25fcb846fb15"
+}

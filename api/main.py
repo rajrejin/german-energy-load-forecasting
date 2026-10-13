@@ -113,7 +113,7 @@ def create_app(store: ArtifactStore | None = None, settings: ApiSettings | None 
         return err(500, "internal_error", "internal error")  # no stack trace in the response
 
     def require_key(x_api_key: str | None = Header(default=None)) -> None:
-        if settings.api_key is None:
+        if not settings.api_key:  # unset or empty: authentication disabled (local use only)
             return
         if x_api_key is None or not hmac.compare_digest(x_api_key, settings.api_key):
             raise ApiError(401, "unauthorized", "missing or invalid API key")

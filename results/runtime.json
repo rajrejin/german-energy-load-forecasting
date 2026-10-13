@@ -1,0 +1,90 @@
+{
+  "fit_seconds_by_zone_and_model": {
+    "50Hertz": {
+      "lightgbm": 15.2,
+      "lstm": 436.2,
+      "lstm_s1": 529.1,
+      "lstm_s2": 349.5,
+      "lstm_s3": 664.5,
+      "lstm_s4": 395.1,
+      "naive_day": 0.0,
+      "naive_week": 0.0
+    },
+    "Amprion": {
+      "lightgbm": 12.5,
+      "lstm": 488.6,
+      "lstm_s1": 837.5,
+      "lstm_s2": 789.8,
+      "lstm_s3": 528.8,
+      "lstm_s4": 726.1,
+      "naive_day": 0.0,
+      "naive_week": 0.0
+    },
+    "DE": {
+      "lightgbm": 18.3,
+      "lightgbm_abl_laggen": 23.4,
+      "lightgbm_abl_noweather": 8.2,
+      "lstm": 636.4,
+      "lstm_abl_lb336": 936.6,
+      "lstm_abl_lb72": 146.5,
+      "lstm_abl_no2020": 477.5,
+      "lstm_abl_no2022": 415.9,
+      "lstm_abl_nocalemb": 444.0,
+      "lstm_abl_noweather": 473.6,
+      "lstm_s1": 724.9,
+      "lstm_s2": 696.4,
+      "lstm_s3": 839.5,
+      "lstm_s4": 788.4,
+      "naive_day": 0.0,
+      "naive_week": 0.0
+    },
+    "TenneT": {
+      "lightgbm": 17.5,
+      "lstm": 420.2,
+      "lstm_s1": 920.4,
+      "lstm_s2": 526.4,
+      "lstm_s3": 389.5,
+      "lstm_s4": 634.8,
+      "naive_day": 0.0,
+      "naive_week": 0.0
+    },
+    "TransnetBW": {
+      "lightgbm": 23.2,
+      "lstm": 615.1,
+      "lstm_s1": 492.6,
+      "lstm_s2": 636.8,
+      "lstm_s3": 743.3,
+      "lstm_s4": 532.6,
+      "naive_day": 0.0,
+      "naive_week": 0.0
+    }
+  },
+  "hpo": {
+    "lightgbm_DE": {
+      "trials": 20,
+      "total_seconds": 526.8
+    },
+    "lstm_DE": {
+      "trials": 20,
+      "total_seconds": 3800.5
+    }
+  },
+  "dask_benchmark": {
+    "sequential_1_thread": {
+      "wall_seconds": 423.8623938560486,
+      "peak_rss_mb": 1041.9296875
+    },
+    "sequential_all_threads": {
+      "wall_seconds": 256.24450850486755,
+      "peak_rss_mb": 1112.9453125
+    },
+    "parallel": {
+      "wall_seconds": 233.55905938148499,
+      "startup_seconds": 2.0260114669799805,
+      "peak_rss_mb": 3541.99609375
+    },
+    "speedup_vs_seq_1_thread": 1.8147974862483522,
+    "speedup_vs_seq_all_threads": 1.0971293906708588
+  },
+  "briefing_seconds_per_briefing": 288.4619545340538
+}

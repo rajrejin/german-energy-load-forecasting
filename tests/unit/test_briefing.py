@@ -7,7 +7,13 @@ import pytest
 
 from energy.briefing.aggregate import DayForecast, aggregate_week, aggregate_zone, label
 from energy.briefing.evaluate import week_starts
-from energy.briefing.llm import SYSTEM, generate, template_briefing, user_prompt
+from energy.briefing.llm import (
+    SYSTEM,
+    generate,
+    overview_prompt,
+    template_briefing,
+    zone_prompt,
+)
 from energy.briefing.verify import candidates, numbers_in, parse_number, verify
 
 
@@ -106,47 +112,66 @@ def test_number_parsing_hand_cases():
 
 
 class Stub:
+    """Scripted stand-in for the language model: answers each section from the template and can
+    be told to answer badly for a section a number of times first."""
+
     name = "stub"
 
-    def __init__(self, replies):
-        self.replies = list(replies)
+    def __init__(self, facts, bad=None, garbage=False):
+        self.tmpl = template_briefing(facts)
+        self.bad = dict(bad or {})  # section -> remaining bad answers
+        self.garbage = garbage
         self.prompts = []
 
-    def complete(self, system, user):
+    def complete(self, system, user, schema):
         self.prompts.append(user)
-        return self.replies.pop(0)
+        if "bullets" in schema["properties"]:
+            section = user.split("FACTS for zone ")[1].split(" ")[0]
+            good = {"bullets": self.tmpl.zones[section]}
+            wrong = {"bullets": ["Peak 12345678 MW."] + self.tmpl.zones[section][1:]}
+        else:
+            section = "overview"
+            good = {
+                "headline": self.tmpl.headline,
+                "risks": self.tmpl.risks,
+                "attention": self.tmpl.attention,
+            }
+            wrong = {**good, "headline": "Demand hits 77777 MW"}
+        if self.garbage:
+            return "not json at all"
+        if self.bad.get(section, 0) > 0:
+            self.bad[section] -= 1
+            return json.dumps(wrong)
+        return json.dumps(good)
 
 
 def test_generate_first_attempt_pass(facts):
     f, _ = facts
-    good = json.dumps(
-        {k: v for k, v in template_briefing(f).model_dump().items() if k != "fallback_template"}
-    )
-    b, info = generate(f, Stub([good]))
-    assert info["passed_first_attempt"] and not info["fallback"] and info["attempts"] == 1
+    b, info = generate(f, Stub(f))
+    assert info["passed_first_attempt"] and not info["fallback"]
+    assert info["attempts"] == len(f["zones"]) + 1  # one call per zone plus the overview
+    assert not b.fallback_template and info["final_problems"] == []
+
+
+def test_generate_retries_failing_section_with_explicit_instruction(facts):
+    f, _ = facts
+    stub = Stub(f, bad={"TenneT": 1})
+    b, info = generate(f, stub)
+    assert info["sections"]["TenneT"]["attempts"] == 2
+    assert not info["passed_first_attempt"] and not info["fallback"]
+    retry_prompt = [p for p in stub.prompts if "failed verification" in p]
+    assert len(retry_prompt) == 1 and "12345678" in retry_prompt[0]
     assert not b.fallback_template
 
 
-def test_generate_retries_with_explicit_instruction_then_passes(facts):
+def test_generate_falls_back_per_section_after_two_retries(facts):
     f, _ = facts
-    t = {k: v for k, v in template_briefing(f).model_dump().items() if k != "fallback_template"}
-    wrong = json.loads(json.dumps(t))
-    wrong["zones"]["TenneT"][0] = "Peak 12345678 MW."
-    stub = Stub([json.dumps(wrong), json.dumps(t)])
-    b, info = generate(f, stub)
-    assert info["attempts"] == 2 and not info["passed_first_attempt"] and not info["fallback"]
-    assert "12345678" in stub.prompts[1] and "failed verification" in stub.prompts[1]
-
-
-def test_generate_falls_back_after_two_retries_and_on_bad_json(facts):
-    f, _ = facts
-    t = {k: v for k, v in template_briefing(f).model_dump().items() if k != "fallback_template"}
-    wrong = json.loads(json.dumps(t))
-    wrong["headline"] = "Demand hits 77777 MW"
-    b, info = generate(f, Stub([json.dumps(wrong)] * 3))
-    assert b.fallback_template and info["fallback"] and info["attempts"] == 3
-    b, info = generate(f, Stub(["not json at all"] * 3))
-    assert b.fallback_template and info["attempts"] == 3
+    b, info = generate(f, Stub(f, bad={"overview": 5}))
+    assert info["fallback_sections"] == ["overview"] and b.fallback_template
+    assert info["sections"]["overview"]["attempts"] == 3
+    assert b.zones["TenneT"] == template_briefing(f).zones["TenneT"]  # zones were fine
+    b, info = generate(f, Stub(f, garbage=True))
+    assert b.fallback_template and set(info["fallback_sections"]) == {*f["zones"], "overview"}
     b, info = generate(f, None)
     assert b.fallback_template and info["backend"] == "template"
 
@@ -154,7 +179,8 @@ def test_generate_falls_back_after_two_retries_and_on_bad_json(facts):
 def test_prompts_are_constrained(facts):
     f, _ = facts
     assert "ONLY" in SYSTEM and "JSON" in SYSTEM
-    assert "peak_day_index" not in user_prompt(f)
+    assert "peak_day_index" not in zone_prompt("TenneT", f["zones"]["TenneT"], f)
+    assert "peak_hour_drivers" not in overview_prompt(f)
 
 
 def test_week_starts_requires_two_full_weeks():

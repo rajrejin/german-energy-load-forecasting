@@ -21,7 +21,7 @@ from energy.evaluation.significance import block_bootstrap_ci, dm_test
 
 log = logging.getLogger(__name__)
 
-LADDER = ["naive_day", "naive_week", "mstl_arima", "lightgbm", "lstm"]
+LADDER = ["naive_day", "naive_week", "mstl_arima", "lightgbm", "lstm", "pooled_lstm"]
 SEEDS = [0, 1, 2, 3, 4]
 
 
