@@ -92,5 +92,58 @@
   },
   "yearly_ratio_2020": 0.961499072804727,
   "yearly_ratio_2022": 0.9591523544727727,
-  "covid_lockdown_window_ratio": 0.9162213189730913
+  "covid_lockdown_window_ratio": 0.9162213189730913,
+  "generation_mean_mw_2023": {
+    "50Hertz": {
+      "lignite": 4913.169834474886,
+      "wind_offshore": 488.3144691780822,
+      "hydropower": 109.26840753424658,
+      "other_conventional": 762.2896689497717,
+      "other_renewables": 27.387728310502283,
+      "biomass": 933.3532534246575,
+      "wind_onshore": 4375.723059360731,
+      "photovoltaics": 1717.5738299086759,
+      "hard_coal": 508.10296803652966,
+      "pumped_storage": 366.0100456621005,
+      "natural_gas": 1214.4657248858448
+    },
+    "Amprion": {
+      "lignite": 3968.434560502283,
+      "nuclear": 264.3589831565814,
+      "hydropower": 122.45570776255708,
+      "other_conventional": 665.951198630137,
+      "other_renewables": 69.75659246575343,
+      "biomass": 781.7398687214612,
+      "wind_onshore": 3043.2501712328767,
+      "photovoltaics": 1354.41823630137,
+      "hard_coal": 1906.1003710045661,
+      "pumped_storage": 313.8841324200913,
+      "natural_gas": 3096.114925799087
+    },
+    "TenneT": {
+      "lignite": 4.623458904109589,
+      "wind_offshore": 2196.9099315068493,
+      "hydropower": 973.4932648401826,
+      "other_conventional": 302.58062214611874,
+      "other_renewables": 29.664326484018265,
+      "biomass": 1939.3823344748857,
+      "wind_onshore": 5713.097916666667,
+      "photovoltaics": 2410.27274543379,
+      "hard_coal": 1062.3626997716894,
+      "pumped_storage": 179.20176940639269,
+      "natural_gas": 1283.7523401826484
+    },
+    "TransnetBW": {
+      "nuclear": 203.54811643835617,
+      "hydropower": 509.4876712328767,
+      "other_conventional": 136.32462899543378,
+      "other_renewables": 11.021004566210046,
+      "biomass": 602.9788812785388,
+      "wind_onshore": 453.29375,
+      "photovoltaics": 858.4322203196347,
+      "hard_coal": 1061.0986872146118,
+      "pumped_storage": 302.5896974885845,
+      "natural_gas": 237.97200342465754
+    }
+  }
 }

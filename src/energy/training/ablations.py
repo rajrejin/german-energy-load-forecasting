@@ -46,27 +46,40 @@ def run_ablations(
         save_artifact(name, ctx, model, met, 0)
 
 
+def finalize_pooled(folder, cfg: Config) -> None:
+    """Write the manifest of a saved pooled model (validation loss read from its history)."""
+    import json
+
+    from energy.data.build import processed_path
+    from energy.evaluation.backtest import make_context as _mc
+
+    meta = json.loads((folder / "meta.json").read_text())
+    best = min(h["val_loss"] for h in meta["history"])
+    first = meta["zones"][0]
+    dates = _mc(first, cfg).dates
+    write_manifest(
+        folder,
+        model="pooled_lstm",
+        zone="pooled:" + ",".join(meta["zones"]),
+        cfg=cfg,
+        data_path=processed_path(first, cfg),
+        seed=meta["seed"],
+        train_period=(dates["train"][0], dates["train"][1]),
+        val_metrics={"val_pinball_scaled": float(best)},
+    )
+
+
 def train_pooled(cfg: Config | None = None, hp: dict[str, Any] | None = None) -> None:
     cfg = cfg or load_config()
     folder = cfg.path("artifacts") / "models" / "pooled" / "pooled_lstm"
     if (folder / "manifest.json").exists():
         log.info("pooled model exists")
         return
-    ctxs = {z: make_context(z, cfg) for z in ZONES}
-    hp = hp or load_best_hp("lstm", cfg)
-    p = PooledLSTM(cfg, ZONES, seed=0, hp=hp)
-    p.fit(ctxs)
-    folder.mkdir(parents=True, exist_ok=True)
-    p.save(folder)
-    from energy.data.build import processed_path
-
-    write_manifest(
-        folder,
-        model="pooled_lstm",
-        zone="pooled:" + ",".join(ZONES),
-        cfg=cfg,
-        data_path=processed_path("DE", cfg),
-        seed=0,
-        train_period=(ctxs["DE"].dates["train"][0], ctxs["DE"].dates["train"][1]),
-        val_metrics={"val_pinball_scaled": float(p.best_val_loss)},
-    )
+    if not (folder / "model.pt").exists():
+        ctxs = {z: make_context(z, cfg) for z in ZONES}
+        hp = hp or load_best_hp("lstm", cfg)
+        p = PooledLSTM(cfg, ZONES, seed=0, hp=hp)
+        p.fit(ctxs)
+        folder.mkdir(parents=True, exist_ok=True)
+        p.save(folder)
+    finalize_pooled(folder, cfg)

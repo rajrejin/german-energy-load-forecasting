@@ -36,7 +36,7 @@
         "precipitation": 0
       },
       "forecast_weather_first": "2021-01-01T00:00:00+00:00",
-      "smard_load_forecast_hours": 50806,
+      "smard_load_forecast_hours": 103242,
       "outlier_hours": 0,
       "outlier_examples": [],
       "coverage_by_year": {
@@ -90,7 +90,7 @@
         "precipitation": 0
       },
       "forecast_weather_first": "2021-01-01T00:00:00+00:00",
-      "smard_load_forecast_hours": 0,
+      "smard_load_forecast_hours": 103027,
       "outlier_hours": 0,
       "outlier_examples": [],
       "coverage_by_year": {
@@ -143,8 +143,8 @@
         "wind_speed_100m": 0,
         "precipitation": 0
       },
-      "forecast_weather_first": null,
-      "smard_load_forecast_hours": 0,
+      "forecast_weather_first": "2021-01-01T00:00:00+00:00",
+      "smard_load_forecast_hours": 102979,
       "outlier_hours": 0,
       "outlier_examples": [],
       "coverage_by_year": {
@@ -197,8 +197,8 @@
         "wind_speed_100m": 0,
         "precipitation": 0
       },
-      "forecast_weather_first": null,
-      "smard_load_forecast_hours": 0,
+      "forecast_weather_first": "2021-01-01T00:00:00+00:00",
+      "smard_load_forecast_hours": 103074,
       "outlier_hours": 0,
       "outlier_examples": [],
       "coverage_by_year": {
@@ -251,8 +251,8 @@
         "wind_speed_100m": 0,
         "precipitation": 0
       },
-      "forecast_weather_first": null,
-      "smard_load_forecast_hours": 0,
+      "forecast_weather_first": "2021-01-01T00:00:00+00:00",
+      "smard_load_forecast_hours": 103027,
       "outlier_hours": 2,
       "outlier_examples": [
         "2016-01-01T07:00:00+00:00",

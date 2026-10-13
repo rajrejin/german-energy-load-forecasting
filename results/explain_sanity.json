@@ -1,0 +1,197 @@
+{
+  "split": "val",
+  "n_explained_origins": 200,
+  "n_background": 100,
+  "shap_nsamples": 100,
+  "explained_output": "mean over the 24 target hours of the median forecast",
+  "additivity": {
+    "mean_abs_gap_mw": 793.7329432546326,
+    "median_abs_gap_mw": 678.6915659127735,
+    "mean_abs_output_deviation_mw": 4608.05322265625,
+    "gap_relative_to_output_deviation": 0.1722490832684211
+  },
+  "permutation_agreement": {
+    "spearman_rho": 0.8985829959514171,
+    "p_value": 8.36999897274098e-15,
+    "n_features": 39,
+    "top5_shap": [
+      "fut_cal:weekday",
+      "hist:load",
+      "hist_cal:weekday",
+      "fut:hdd",
+      "fut:latest_same_hour"
+    ],
+    "top5_permutation": [
+      "fut_cal:weekday",
+      "hist:load",
+      "hist_cal:weekday",
+      "fut:hdd",
+      "fut:latest_same_hour"
+    ]
+  },
+  "directional": {
+    "winter_temperature": {
+      "n": 48,
+      "spearman_temp_vs_attribution": -0.9909900130264871,
+      "p_value": 8.113556461675895e-42,
+      "holds": true,
+      "statement": "lower forecast temperature gives a higher attribution in winter"
+    },
+    "weekend_flag": {
+      "mean_attr_weekend_mw": -5601.431307868472,
+      "mean_attr_weekday_mw": 2562.0446646507876,
+      "holds": true,
+      "statement": "weekend target days receive lower attribution than weekdays"
+    }
+  },
+  "checks_passed": {
+    "additivity_gap_under_10pct_of_output_deviation": false,
+    "permutation_rho_above_0.5": true,
+    "winter_temperature_direction": true,
+    "weekend_direction": true,
+    "stability_mean_spearman_above_0.8": true
+  },
+  "zone": "DE",
+  "stability": {
+    "background_seeds": [
+      1,
+      2,
+      3
+    ],
+    "pairwise_spearman": [
+      0.9797570850202431,
+      0.9908906882591093,
+      0.9854251012145749
+    ],
+    "mean_spearman": 0.9853576248313091,
+    "top5_overlap_mean": 0.8666666666666667,
+    "holds": true
+  },
+  "cases": {
+    "winter_weekday_morning_peak": {
+      "row": 338,
+      "hour": 8,
+      "rule": "weekday Dec-Feb with highest 08:00 load",
+      "date": "2023-12-05",
+      "base_value_mw": 61230.83984375,
+      "model_output_mw": 68654.515625,
+      "additivity_gap_mw": 339.5481873313838,
+      "top_features": [
+        {
+          "feature": "fut_cal:weekday",
+          "attribution_mw": 5542.574124412106
+        },
+        {
+          "feature": "hist_cal:weekday",
+          "attribution_mw": 3951.7755821920914
+        },
+        {
+          "feature": "hist:obs_temperature_2m",
+          "attribution_mw": -2087.1482452539185
+        },
+        {
+          "feature": "fut:lag168",
+          "attribution_mw": 1769.9505379939146
+        },
+        {
+          "feature": "hist:doy_cos",
+          "attribution_mw": -1621.6279122826293
+        }
+      ]
+    },
+    "summer_midday": {
+      "row": 177,
+      "hour": 13,
+      "rule": "summer weekday with median 13:00 load",
+      "date": "2023-06-27",
+      "base_value_mw": 63486.05078125,
+      "model_output_mw": 62308.43359375,
+      "additivity_gap_mw": 703.372733756878,
+      "top_features": [
+        {
+          "feature": "hist:load",
+          "attribution_mw": -8222.479558669931
+        },
+        {
+          "feature": "fut_cal:weekday",
+          "attribution_mw": 3730.7400069168916
+        },
+        {
+          "feature": "hist_cal:weekday",
+          "attribution_mw": 2694.9683943532877
+        },
+        {
+          "feature": "hist:doy_cos",
+          "attribution_mw": 1645.7846516385716
+        },
+        {
+          "feature": "fut:lag48",
+          "attribution_mw": -1477.6577370692114
+        }
+      ]
+    },
+    "holiday": {
+      "row": 96,
+      "hour": 12,
+      "rule": "first weekday public holiday in all states",
+      "date": "2023-04-07",
+      "base_value_mw": 64636.12890625,
+      "model_output_mw": 50834.53515625,
+      "additivity_gap_mw": 737.6564372392968,
+      "top_features": [
+        {
+          "feature": "fut:holiday_share",
+          "attribution_mw": -7151.548146148689
+        },
+        {
+          "feature": "fut_cal:holiday",
+          "attribution_mw": -3162.754009547426
+        },
+        {
+          "feature": "fut:latest_same_hour",
+          "attribution_mw": -1178.1922627749434
+        },
+        {
+          "feature": "hist_cal:weekday",
+          "attribution_mw": -1119.7267280245603
+        },
+        {
+          "feature": "hist:load",
+          "attribution_mw": -656.1000110080871
+        }
+      ]
+    },
+    "cold_snap": {
+      "row": 336,
+      "hour": 18,
+      "rule": "coldest day by mean forecast temperature",
+      "date": "2023-12-03",
+      "base_value_mw": 62695.0390625,
+      "model_output_mw": 58492.24609375,
+      "additivity_gap_mw": 568.8344874800896,
+      "top_features": [
+        {
+          "feature": "fut_cal:weekday",
+          "attribution_mw": -7755.96458918113
+        },
+        {
+          "feature": "fut:hdd",
+          "attribution_mw": 3549.1993218844195
+        },
+        {
+          "feature": "hist:load",
+          "attribution_mw": 2605.419097167929
+        },
+        {
+          "feature": "fut:fc_shortwave_radiation",
+          "attribution_mw": 1744.9162722459391
+        },
+        {
+          "feature": "hist:obs_temperature_2m",
+          "attribution_mw": -1667.575814894047
+        }
+      ]
+    }
+  },
+  "note": "Attributions explain the model, not the physical causes of demand."
+}

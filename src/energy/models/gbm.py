@@ -146,5 +146,12 @@ class GBMForecaster(Forecaster):
         for k, b in self.models.items():
             b.save_model(str(path / f"{k}.txt"))
         (path / "meta.json").write_text(
-            json.dumps({"best_iter": self.best_iter, "params": self.params, "seed": self.seed})
+            json.dumps(
+                {
+                    "best_iter": self.best_iter,
+                    "params": self.params,
+                    "seed": self.seed,
+                    "features": self.features,
+                }
+            )
         )

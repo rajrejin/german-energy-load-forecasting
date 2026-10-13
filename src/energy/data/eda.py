@@ -65,7 +65,13 @@ def run_eda(cfg: Config | None = None) -> dict[str, Any]:
     _style(axes[0], "National load profile by hour (local time)", "hour of day", "GW")
     axes[0].legend(frameon=False)
     season = de.index.month.map(
-        lambda m: "winter" if m in (12, 1, 2) else "spring" if m in (3, 4, 5) else "summer" if m in (6, 7, 8) else "autumn"
+        lambda m: "winter"
+        if m in (12, 1, 2)
+        else "spring"
+        if m in (3, 4, 5)
+        else "summer"
+        if m in (6, 7, 8)
+        else "autumn"
     )
     for i, s in enumerate(["winter", "spring", "summer", "autumn"]):
         g = de[(season == s) & (de.weekday < 5)].groupby("hour")["load"].mean() / 1000
@@ -108,7 +114,9 @@ def run_eda(cfg: Config | None = None) -> dict[str, Any]:
         ratio = (hm / base.reindex(hm.index)).dropna()
         hol[r] = float(ratio.mean())
     ax.bar(list(hol), [(v - 1) * 100 for v in hol.values()], color=[COLORS[r] for r in hol])
-    _style(ax, "Load on weekday public holidays vs ordinary weekdays (same month)", "", "% difference")
+    _style(
+        ax, "Load on weekday public holidays vs ordinary weekdays (same month)", "", "% difference"
+    )
     fig.tight_layout()
     fig.savefig(out_dir / "holiday_effect.png", dpi=130)
     plt.close(fig)
@@ -141,7 +149,9 @@ def run_eda(cfg: Config | None = None) -> dict[str, Any]:
         (axes[1], 2022, [2018, 2019, 2021], "2022 (energy crisis) vs 2018, 2019, 2021 mean"),
     ):
         cur = wl[wl.index.year == yr]
-        ref = pd.concat([wl[wl.index.year == y].reset_index(drop=True) for y in ref_years], axis=1).mean(axis=1)
+        ref = pd.concat(
+            [wl[wl.index.year == y].reset_index(drop=True) for y in ref_years], axis=1
+        ).mean(axis=1)
         n = min(len(cur), len(ref))
         ax.plot(range(n), ref.iloc[:n].values, color="gray", label="reference years", lw=2)
         ax.plot(range(n), cur.values[:n], color=PAL[1], label=str(yr), lw=2)
@@ -152,7 +162,8 @@ def run_eda(cfg: Config | None = None) -> dict[str, Any]:
         mar = de["load"]
         a = mar[(mar.index >= "2020-03-23") & (mar.index < "2020-05-04")].mean()
         ref_vals = [
-            mar[(mar.index >= f"{y}-03-23") & (mar.index < f"{y}-05-04")].mean() for y in (2017, 2018, 2019)
+            mar[(mar.index >= f"{y}-03-23") & (mar.index < f"{y}-05-04")].mean()
+            for y in (2017, 2018, 2019)
         ]
         stats["covid_lockdown_window_ratio"] = float(a / np.mean(ref_vals))
     fig.tight_layout()

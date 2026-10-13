@@ -1,0 +1,10 @@
+{
+ "split": "test",
+ "ladder": "D:\\Projects\\energy-forecaster\\results\\ladder.csv",
+ "significance": "D:\\Projects\\energy-forecaster\\results\\significance.csv",
+ "by_hour": "D:\\Projects\\energy-forecaster\\results\\by_hour.csv",
+ "breakdowns": "D:\\Projects\\energy-forecaster\\results\\breakdowns.csv",
+ "external_benchmark": "D:\\Projects\\energy-forecaster\\results\\external_benchmark.csv",
+ "seed_spread": "D:\\Projects\\energy-forecaster\\results\\seed_spread.csv",
+ "ablations": "D:\\Projects\\energy-forecaster\\results\\ablations.csv"
+}

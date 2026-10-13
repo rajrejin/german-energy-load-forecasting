@@ -140,7 +140,13 @@ def load_artifact(kind: str, zone: str, cfg: Config, name: str | None = None) ->
         import lightgbm as lgb
 
         meta = json.loads((folder / "meta.json").read_text())
-        g = GBMForecaster(cfg, params=meta["params"], seed=meta["seed"])
+        features = meta.get("features")
+        if features is None and name:
+            # artifacts written before the feature list was stored: use the registry
+            from energy.training.ablations import ABLATIONS
+
+            features = ABLATIONS.get(name, ("", {}))[1].get("features")
+        g = GBMForecaster(cfg, params=meta["params"], seed=meta["seed"], features=features)
         g.best_iter = meta["best_iter"]
         for k in g.best_iter:
             g.models[k] = lgb.Booster(model_file=str(folder / f"{k}.txt"))

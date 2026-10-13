@@ -1,0 +1,124 @@
+{
+  "kind": "lstm",
+  "max_epochs": 6,
+  "zones": [
+    "50Hertz",
+    "Amprion",
+    "TenneT",
+    "TransnetBW"
+  ],
+  "cpu_count": 8,
+  "ram_gb": 6.937145233154297,
+  "sequential_1_thread": {
+    "wall_seconds": 423.8623938560486,
+    "peak_rss_mb": 1041.9296875,
+    "tasks": [
+      {
+        "zone": "50Hertz",
+        "seconds": 113.84859347343445,
+        "val_mae": 460.1225905059176,
+        "worker_rss_mb": 625.625,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seq1\\50Hertz_lstm.npy"
+      },
+      {
+        "zone": "Amprion",
+        "seconds": 107.22759652137756,
+        "val_mae": 679.0075354776702,
+        "worker_rss_mb": 716.015625,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seq1\\Amprion_lstm.npy"
+      },
+      {
+        "zone": "TenneT",
+        "seconds": 99.35433101654053,
+        "val_mae": 458.54155473764064,
+        "worker_rss_mb": 748.67578125,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seq1\\TenneT_lstm.npy"
+      },
+      {
+        "zone": "TransnetBW",
+        "seconds": 97.96610927581787,
+        "val_mae": 201.42248564792615,
+        "worker_rss_mb": 767.69140625,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seq1\\TransnetBW_lstm.npy"
+      }
+    ]
+  },
+  "sequential_all_threads": {
+    "wall_seconds": 256.24450850486755,
+    "peak_rss_mb": 1112.9453125,
+    "tasks": [
+      {
+        "zone": "50Hertz",
+        "seconds": 60.42358088493347,
+        "val_mae": 460.12256990227957,
+        "worker_rss_mb": 761.5,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seqN\\50Hertz_lstm.npy"
+      },
+      {
+        "zone": "Amprion",
+        "seconds": 65.32434272766113,
+        "val_mae": 679.0072574479516,
+        "worker_rss_mb": 820.375,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seqN\\Amprion_lstm.npy"
+      },
+      {
+        "zone": "TenneT",
+        "seconds": 68.04218244552612,
+        "val_mae": 457.085076576824,
+        "worker_rss_mb": 815.33203125,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seqN\\TenneT_lstm.npy"
+      },
+      {
+        "zone": "TransnetBW",
+        "seconds": 62.17572498321533,
+        "val_mae": 201.42904693756793,
+        "worker_rss_mb": 863.078125,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\seqN\\TransnetBW_lstm.npy"
+      }
+    ]
+  },
+  "parallel": {
+    "wall_seconds": 233.55905938148499,
+    "startup_seconds": 2.0260114669799805,
+    "peak_rss_mb": 3541.99609375,
+    "tasks": [
+      {
+        "zone": "50Hertz",
+        "seconds": 221.73389053344727,
+        "val_mae": 460.1225905059176,
+        "worker_rss_mb": 353.05859375,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\par\\50Hertz_lstm.npy"
+      },
+      {
+        "zone": "Amprion",
+        "seconds": 221.8245403766632,
+        "val_mae": 679.0075354776702,
+        "worker_rss_mb": 368.625,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\par\\Amprion_lstm.npy"
+      },
+      {
+        "zone": "TenneT",
+        "seconds": 222.00174236297607,
+        "val_mae": 458.54155473764064,
+        "worker_rss_mb": 370.48046875,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\par\\TenneT_lstm.npy"
+      },
+      {
+        "zone": "TransnetBW",
+        "seconds": 221.88200783729553,
+        "val_mae": 201.42248564792615,
+        "worker_rss_mb": 356.51171875,
+        "pred_path": "D:\\Projects\\energy-forecaster\\data\\processed\\parallel_tmp\\par\\TransnetBW_lstm.npy"
+      }
+    ]
+  },
+  "max_abs_prediction_diff_seq1_vs_parallel_mw": {
+    "50Hertz": 0.0,
+    "Amprion": 0.0,
+    "TenneT": 0.0,
+    "TransnetBW": 0.0
+  },
+  "speedup_vs_seq_1_thread": 1.8147974862483522,
+  "speedup_vs_seq_all_threads": 1.0971293906708588,
+  "parallel_workers": 4
+}

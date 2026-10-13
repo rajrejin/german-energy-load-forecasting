@@ -1,0 +1,109 @@
+# Azure DevOps pipeline: test -> build -> push (GHCR) -> deploy (approval on the environment).
+# Written and statically validated only; not executed. Setup steps: docs/AZURE_DEPLOY.md.
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: ['*']
+
+variables:
+  - group: energy-forecaster          # GHCR_USER, GHCR_TOKEN (secret), AZ_RESOURCE_GROUP, AZ_APP_NAME
+  - name: imageName
+    value: energy-api
+  - name: pythonVersion
+    value: '3.11'
+
+stages:
+  - stage: test
+    displayName: Test
+    jobs:
+      - job: pytest
+        pool:
+          vmImage: ubuntu-24.04     # or: name: <your self-hosted pool>
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(pythonVersion)
+          - script: |
+              python -m pip install -U pip
+              python -m pip install -r requirements-dev.txt
+              python -m pip install -e .
+            displayName: Install
+          - script: |
+              ruff check src api tests
+              ruff format --check src api tests
+            displayName: Lint
+          - script: mypy
+            displayName: Type check
+          - script: pytest --junitxml=junit.xml --cov-report=xml
+            displayName: Tests with coverage (threshold in pyproject.toml)
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: junit.xml
+          - task: PublishCodeCoverageResults@2
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: coverage.xml
+
+  - stage: build
+    displayName: Build image
+    dependsOn: test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: docker_build
+        pool:
+          vmImage: ubuntu-24.04
+        steps:
+          - script: docker build -f docker/Dockerfile.api -t $(imageName):$(Build.BuildId) .
+            displayName: Build API image
+          - script: docker save $(imageName):$(Build.BuildId) -o $(Build.ArtifactStagingDirectory)/image.tar
+            displayName: Save image
+          - publish: $(Build.ArtifactStagingDirectory)/image.tar
+            artifact: image
+
+  - stage: push
+    displayName: Push to GitHub Container Registry
+    dependsOn: build
+    jobs:
+      - job: push
+        pool:
+          vmImage: ubuntu-24.04
+        steps:
+          - download: current
+            artifact: image
+          - script: |
+              docker load -i $(Pipeline.Workspace)/image/image.tar
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$(GHCR_USER)" --password-stdin
+              docker tag $(imageName):$(Build.BuildId) ghcr.io/$(GHCR_USER)/$(imageName):$(Build.BuildId)
+              docker tag $(imageName):$(Build.BuildId) ghcr.io/$(GHCR_USER)/$(imageName):latest
+              docker push ghcr.io/$(GHCR_USER)/$(imageName):$(Build.BuildId)
+              docker push ghcr.io/$(GHCR_USER)/$(imageName):latest
+            displayName: Login and push
+            env:
+              GHCR_TOKEN: $(GHCR_TOKEN)
+
+  - stage: deploy
+    displayName: Deploy to Container Apps
+    dependsOn: push
+    jobs:
+      - deployment: deploy
+        environment: energy-production   # add an Approvals check on this environment
+        pool:
+          vmImage: ubuntu-24.04
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: energy-azure   # service connection name
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az containerapp update \
+                        --name "$(AZ_APP_NAME)" \
+                        --resource-group "$(AZ_RESOURCE_GROUP)" \
+                        --image "ghcr.io/$(GHCR_USER)/$(imageName):$(Build.BuildId)"

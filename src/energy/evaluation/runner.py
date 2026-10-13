@@ -80,10 +80,10 @@ def run_backtest(
     cfg = cfg or load_config()
     ctx = ctx or make_context(zone, cfg)
     for name in names:
-        kind = base_kind(name)
         if name == "mstl_arima":
             _run_mstl(ctx, splits, force)
             continue
+        kind = base_kind(name)
         model: Forecaster
         if name == "pooled_lstm":
             from energy.models.pooled_lstm import PooledLSTM
@@ -134,12 +134,16 @@ def _run_mstl(ctx: Context, splits: tuple[str, ...], force: bool) -> None:
 
 
 def all_artifact_names(zone: str, cfg: Config) -> list[str]:
-    base = cfg.path("artifacts") / "models" / zone
-    return (
+    root = cfg.path("artifacts") / "models"
+    base = root / zone
+    names = (
         sorted(p.name for p in base.iterdir() if (p / "manifest.json").exists())
         if base.exists()
         else []
     )
+    if (root / "pooled" / "pooled_lstm" / "manifest.json").exists() and zone != "DE":
+        names.append("pooled_lstm")
+    return names
 
 
 __all__ = ["run_backtest", "get_preds", "ALL_REGIONS", "artifact_dir"]
