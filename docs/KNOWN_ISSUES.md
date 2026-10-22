@@ -27,3 +27,5 @@ Each was reproduced first and now has a regression test where it is code.
 | `infra/azure/deploy.sh` created the resource group before `--yes` | a cloud change during what was described as a preview | without `--yes` it only previews (or explains that the group does not exist); it also runs `az bicep build` first |
 | HANDOFF quoted about 40 minutes for the pooled model | wrong number (the artifact records 1699 s) | now read from `results/runtime.json` |
 | README said `energy fetch` takes about 30 minutes | understated (generation alone took about 2 hours here) | quick start split into load, weather and optional generation |
+| Streamlit Explain waterfall drew its axis from 0 MW | attributions of a few thousand MW next to a 61,000 MW base bar were unreadable slivers | the waterfall starts at the base value and zooms to the attribution range |
+| Streamlit peak metric showed the peak hour as a green "delta" arrow | read as an increase, which it is not | the hour moved into the metric label |

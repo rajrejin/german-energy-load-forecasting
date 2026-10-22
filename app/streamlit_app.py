@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 import httpx
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -98,11 +99,8 @@ with tabs[0]:
         fig.update_layout(yaxis_title="MW", height=420, margin={"t": 20})
         st.plotly_chart(fig, width="stretch")
         c1, c2, c3 = st.columns(3)
-        c1.metric(
-            "Peak (p50)",
-            f"{df['p50'].max():,.0f} MW",
-            f"hour {int(df.loc[df['p50'].idxmax(), 'hour_local'])}",
-        )
+        peak_hour = int(df.loc[df["p50"].idxmax(), "hour_local"])
+        c1.metric(f"Peak (p50), local hour {peak_hour}", f"{df['p50'].max():,.0f} MW")
         c2.metric("Energy (p50)", f"{df['p50'].sum() / 1000:,.1f} GWh")
         c3.metric("Mean interval width", f"{(df['p90'] - df['p10']).mean():,.0f} MW")
         st.caption(
@@ -118,15 +116,27 @@ with tabs[1]:
         if ex:
             a = pd.DataFrame(ex["attributions"])
             vals = list(a["attribution_mw"])
+            base = float(ex["base_value_mw"])
+            steps = np.array([*vals, ex["p50"] - base - sum(vals)])
             fig = go.Figure(
                 go.Waterfall(
                     orientation="h",
-                    y=["base value", *a["feature"], "other"],
-                    x=[ex["base_value_mw"], *vals, ex["p50"] - ex["base_value_mw"] - sum(vals)],
-                    measure=["absolute", *["relative"] * len(vals), "relative"],
+                    base=base,
+                    y=[*a["feature"], "all other features"],
+                    x=steps,
+                    measure=["relative"] * len(steps),
                 )
             )
-            fig.update_layout(height=460, xaxis_title="MW", margin={"t": 20})
+            # Start the axis at the base value: from zero the attributions are unreadable.
+            path = base + np.concatenate([[0.0], np.cumsum(steps)])
+            pad = max(0.15 * (path.max() - path.min()), 100.0)
+            fig.update_layout(
+                height=460,
+                xaxis_title=f"MW (starts at the base value {base:,.0f} MW, ends at the forecast)",
+                xaxis_range=[path.min() - pad, path.max() + pad],
+                yaxis_autorange="reversed",
+                margin={"t": 20},
+            )
             st.plotly_chart(fig, width="stretch")
             st.caption(ex["note"])
     else:
