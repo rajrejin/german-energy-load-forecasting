@@ -67,3 +67,10 @@ def test_block_bootstrap_ci_contains_mean_for_noisy_series():
     x = np.array([1.0, -1.0] * 50)
     m, lo, hi = block_bootstrap_ci(x, block=7, n_boot=300)
     assert lo <= m <= hi
+
+
+def test_block_bootstrap_handles_series_shorter_than_a_block():
+    # regression: a 3-day series with 7-day blocks used to raise ValueError
+    m, lo, hi = block_bootstrap_ci(np.array([1.0, 2.0, 3.0]), block=7, n_boot=50)
+    assert m == pytest.approx(2.0) and lo <= m <= hi
+    assert all(math.isnan(v) for v in block_bootstrap_ci(np.array([np.nan]), block=7))

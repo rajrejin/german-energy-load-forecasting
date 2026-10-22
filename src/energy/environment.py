@@ -73,6 +73,10 @@ def write_runtime(cfg: Config | None = None) -> dict[str, Any]:
             "trials": len(df),
             "total_seconds": round(float(df["seconds"].sum()), 1) if "seconds" in df else None,
         }
+    pooled = models / "pooled" / "pooled_lstm" / "meta.json"
+    if pooled.exists():
+        pm = json.loads(pooled.read_text())
+        fit.setdefault("pooled", {})["pooled_lstm"] = round(float(pm.get("train_seconds", 0.0)), 1)
     out: dict[str, Any] = {"fit_seconds_by_zone_and_model": fit, "hpo": hpo}
     pt = cfg.path("results") / "parallel_timing.json"
     if pt.exists():

@@ -32,8 +32,8 @@ stages:
               python -m pip install -e .
             displayName: Install
           - script: |
-              ruff check src api tests
-              ruff format --check src api tests
+              ruff check src api tests app
+              ruff format --check src api tests app
             displayName: Lint
           - script: mypy
             displayName: Type check

@@ -27,6 +27,14 @@ def fetch(
     run_fetch(what, slice_only)
 
 
+@app.command("wait-fetch")
+def wait_fetch() -> None:
+    """Block until no `energy fetch` process is running (works on any OS)."""
+    from energy.data.fetch import wait_for_fetches
+
+    wait_for_fetches()
+
+
 @app.command("build-dataset")
 def build_dataset() -> None:
     """Build tidy hourly tables per zone from the raw caches."""
@@ -70,7 +78,9 @@ def explain(zone: str = "DE", quick: bool = False) -> None:
 @app.command()
 def refresh(
     store: str = typer.Option("local", help="local | azurite | azure"),
-    no_fetch: bool = False,
+    no_fetch: bool = typer.Option(
+        False, "--no-fetch", help="use the cached SMARD load (live weather is still fetched)"
+    ),
     no_explain: bool = False,
 ) -> None:
     """Fetch fresh inputs, check them, forecast, explain and publish to the artifact store."""

@@ -162,7 +162,7 @@ def refresh(
     cfg: Config | None = None,
     now: pd.Timestamp | None = None,
     zones: list[str] | None = None,
-    fetch: bool = True,
+    fetch: bool = True,  # refetch the latest SMARD load chunks
     explain: bool = True,
     weather: dict[str, pd.DataFrame] | None = None,
     shap_samples: int = 100,
@@ -174,8 +174,10 @@ def refresh(
     status: dict[str, Any] = {"run_utc": now.isoformat(), "zones": {}, "published": False}
     if fetch:
         fetch_live_load(cfg)
+    if weather is None:
+        # Weather has no useful cache for the target day, so it is always fetched live
+        # unless the caller supplies it.
         weather = fetch_live_weather(cfg)
-    assert weather is not None
     for z in zones:
         zs: dict[str, Any] = {"ok": False, "reasons": []}
         status["zones"][z] = zs

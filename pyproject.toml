@@ -25,7 +25,7 @@ include = ["energy*", "api*"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["src", "api", "tests"]
+src = ["src", "api", "tests", "app"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "W"]

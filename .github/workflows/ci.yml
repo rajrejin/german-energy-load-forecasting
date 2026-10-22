@@ -20,8 +20,8 @@ jobs:
           python -m pip install -e .
       - name: Lint
         run: |
-          ruff check src api tests
-          ruff format --check src api tests
+          ruff check src api tests app
+          ruff format --check src api tests app
       - name: Type check
         run: mypy
       - name: Tests with coverage (threshold in pyproject.toml)

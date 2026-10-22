@@ -141,3 +141,21 @@ def test_service_not_found_paths(tmp_path):
             call()
     assert svc.zones() == [] and svc.ready()["artifacts_loaded"] is False
     assert np.isnan(np.nan)
+
+
+def test_refresh_without_fetch_uses_cached_load_and_fetches_weather(published, monkeypatch):
+    """Regression: `energy refresh --no-fetch` used to crash on an assert."""
+    store, _, weather, cfg = published
+    calls = {"weather": 0}
+
+    def no_load(*a, **k):
+        raise AssertionError("load must not be refetched with fetch=False")
+
+    def fake_weather(*a, **k):
+        calls["weather"] += 1
+        return weather
+
+    monkeypatch.setattr("energy.serving.refresh.fetch_live_load", no_load)
+    monkeypatch.setattr("energy.serving.refresh.fetch_live_weather", fake_weather)
+    st = refresh(store, cfg, now=NOW, zones=["DE"], fetch=False, explain=False)
+    assert calls["weather"] == 1 and st["zones"]["DE"]["ok"]

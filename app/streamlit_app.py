@@ -81,23 +81,35 @@ with tabs[0]:
             h = pd.DataFrame({"ts": pd.to_datetime(hist["ts_utc"]), "load": hist["load_mw"]})
             h["ts"] = h["ts"].dt.tz_convert("Europe/Berlin")
             fig.add_scatter(x=h["ts"], y=h["load"], name="actual (recent)", line={"color": "#555"})
-        fig.add_scatter(x=df["ts"], y=df["p90"], line={"width": 0}, showlegend=False, hoverinfo="skip")
         fig.add_scatter(
-            x=df["ts"], y=df["p10"], fill="tonexty", fillcolor="rgba(0,114,178,0.2)",
-            line={"width": 0}, name="80% interval",
+            x=df["ts"], y=df["p90"], line={"width": 0}, showlegend=False, hoverinfo="skip"
         )
-        fig.add_scatter(x=df["ts"], y=df["p50"], name="forecast (median)", line={"color": "#0072B2"})
+        fig.add_scatter(
+            x=df["ts"],
+            y=df["p10"],
+            fill="tonexty",
+            fillcolor="rgba(0,114,178,0.2)",
+            line={"width": 0},
+            name="80% interval",
+        )
+        fig.add_scatter(
+            x=df["ts"], y=df["p50"], name="forecast (median)", line={"color": "#0072B2"}
+        )
         fig.update_layout(yaxis_title="MW", height=420, margin={"t": 20})
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         c1, c2, c3 = st.columns(3)
-        c1.metric("Peak (p50)", f"{df['p50'].max():,.0f} MW", f"hour {int(df.loc[df['p50'].idxmax(), 'hour_local'])}")
+        c1.metric(
+            "Peak (p50)",
+            f"{df['p50'].max():,.0f} MW",
+            f"hour {int(df.loc[df['p50'].idxmax(), 'hour_local'])}",
+        )
         c2.metric("Energy (p50)", f"{df['p50'].sum() / 1000:,.1f} GWh")
         c3.metric("Mean interval width", f"{(df['p90'] - df['p10']).mean():,.0f} MW")
         st.caption(
             f"Model {fc['model']} | version {fc['model_version']} | input data up to "
             f"{fc['input_data_timestamp']} | weather: {fc['weather_source']}"
         )
-        st.dataframe(df[["ts", "p10", "p50", "p90"]].round(0), use_container_width=True)
+        st.dataframe(df[["ts", "p10", "p50", "p90"]].round(0), width="stretch")
 
 with tabs[1]:
     if fc and fc.get("explanation_available"):
@@ -115,28 +127,37 @@ with tabs[1]:
                 )
             )
             fig.update_layout(height=460, xaxis_title="MW", margin={"t": 20})
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
             st.caption(ex["note"])
     else:
         st.info("No explanations available for this forecast.")
 
 with tabs[2]:
-    for name, title in (
-        ("ladder.csv", "Benchmark ladder (test period)"),
-        ("by_hour.csv", "MAE by hour of day"),
-        ("ablations.csv", "Ablations"),
-    ):
-        df = safe(get_csv, name)
-        if df is not None:
-            st.subheader(title)
-            st.dataframe(df, use_container_width=True)
+    regime = st.radio(
+        "Weather inputs for the target day",
+        ["reanalysis", "archived"],
+        horizontal=True,
+        help="reanalysis: observed weather as a proxy (optimistic); archived: archived forecasts",
+    )
+    ladder = safe(get_csv, "ladder.csv")
+    if ladder is not None:
+        st.subheader(f"Benchmark ladder, {zone}, test period")
+        cols = ["model", "n_days", "mae", "mae_ci_lo", "mae_ci_hi", "mape", "mase", "coverage_80"]
+        sel = ladder[(ladder["zone"] == zone) & (ladder["regime"] == regime)]
+        st.dataframe(sel[[c for c in cols if c in sel]].round(3), width="stretch", hide_index=True)
     by_hour = safe(get_csv, "by_hour.csv")
-    if by_hour is not None and {"model", "hour", "mae"} <= set(by_hour.columns):
-        z = by_hour[by_hour.get("zone", "DE") == zone] if "zone" in by_hour else by_hour
-        st.plotly_chart(
-            go.Figure([go.Scatter(x=g["hour"], y=g["mae"], name=m) for m, g in z.groupby("model")]),
-            use_container_width=True,
+    if by_hour is not None and {"zone", "regime", "model", "hour", "mae"} <= set(by_hour.columns):
+        st.subheader("MAE by hour of the forecast day")
+        z = by_hour[(by_hour["zone"] == zone) & (by_hour["regime"] == regime)]
+        fig = go.Figure(
+            [go.Scatter(x=g["hour"], y=g["mae"], name=m) for m, g in z.groupby("model")]
         )
+        fig.update_layout(xaxis_title="hour index (0 = local midnight)", yaxis_title="MAE (MW)")
+        st.plotly_chart(fig, width="stretch")
+    abl = safe(get_csv, "ablations.csv")
+    if abl is not None:
+        st.subheader("Ablations (national total, test period)")
+        st.dataframe(abl.round(3), width="stretch", hide_index=True)
 
 with tabs[3]:
     b = safe(get_json, "/v1/briefing/latest")
@@ -169,5 +190,5 @@ with tabs[4]:
             }
             for z, v in dq["zones"].items()
         ]
-        st.dataframe(pd.DataFrame(rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), width="stretch")
         st.json(dq["zone_sum_vs_national"])

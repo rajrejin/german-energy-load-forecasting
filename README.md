@@ -39,7 +39,9 @@ Full diagrams and module map: `docs/ARCHITECTURE.md`.
 
 ```bash
 pip install -r requirements.txt && pip install -e .        # Python 3.11 or newer, CPU PyTorch
-energy fetch && energy build-dataset                       # downloads SMARD and Open-Meteo (about 30 min, cached)
+energy fetch --what load && energy fetch --what weather    # tens of minutes, cached and resumable
+energy fetch --what generation                             # optional (lagged-generation ablation, EDA): about 2 h here
+energy build-dataset
 energy train && energy backtest --splits val,test && energy report
 ```
 
@@ -49,7 +51,7 @@ Serve what you trained (the refresh job needs network access for live inputs):
 energy publish-models && energy refresh && energy serve-api   # then: streamlit run app/streamlit_app.py
 ```
 
-Run times measured on this laptop are in HANDOFF.md and `results/runtime.json`.
+Run times measured on this laptop are in HANDOFF.md and `results/runtime.json`. The weekly briefing needs an optional local language model: `pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu` plus the GGUF file `models/qwen2.5-3b-instruct-q4_k_m.gguf` (from the Qwen/Qwen2.5-3B-Instruct-GGUF repository on Hugging Face), or a running Ollama with `qwen2.5:3b-instruct`. Without either, briefings fall back to the deterministic template.
 
 ## Data
 

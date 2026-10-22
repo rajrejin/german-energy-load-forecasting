@@ -45,6 +45,9 @@ def block_bootstrap_ci(
     x = np.asarray(diff, dtype=float)
     x = x[~np.isnan(x)]
     n = len(x)
+    if n == 0:
+        return float("nan"), float("nan"), float("nan")
+    block = max(1, min(block, n))  # a series shorter than one block is resampled as one block
     rng = np.random.default_rng(seed)
     n_blocks = int(np.ceil(n / block))
     starts_max = n - block

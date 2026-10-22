@@ -57,6 +57,9 @@
       "lstm_s4": 532.6,
       "naive_day": 0.0,
       "naive_week": 0.0
+    },
+    "pooled": {
+      "pooled_lstm": 1699.2
     }
   },
   "hpo": {

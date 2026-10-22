@@ -25,7 +25,7 @@ serve:
 app:
 	streamlit run app/streamlit_app.py
 lint:
-	ruff check src api tests && ruff format --check src api tests
+	ruff check src api tests app && ruff format --check src api tests app
 typecheck:
 	mypy
 test:
