@@ -33,7 +33,7 @@ flowchart LR
   STORE --> API[FastAPI] --> APP[Streamlit]
 ```
 
-Full diagrams and module map: `docs/ARCHITECTURE.md`.
+Full diagrams and module map: `docs/ARCHITECTURE.md`. A study guide that walks through the whole project, with figures, self-test questions and a re-implementation plan, is `docs/STUDY_GUIDE.pdf` (rebuild it with `python scripts/make_study_guide.py`; every number in it is read from `results/`).
 
 ## Quick start (local, no cloud account)
 
