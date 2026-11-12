@@ -32,6 +32,8 @@ from energy.models.base import Forecaster
 
 log = logging.getLogger(__name__)
 
+# Calendar categories: hour of day, weekday, holiday yes/no. CAT_W is the width of the three
+# one-hot vectors glued together; EMB is the embedding size each of them is mapped to.
 N_HOUR, N_WD, N_HOL = 24, 7, 2
 CAT_W = N_HOUR + N_WD + N_HOL
 EMB = (8, 4, 2)
@@ -89,16 +91,19 @@ def fit_scaler(zf: ZoneFrame, train_end_pos: int) -> Scaler:
     temp = obs[:, 0]
     hdd = np.maximum(zf.cfg.features.hdd_base_c - temp, 0)
     cdd = np.maximum(temp - zf.cfg.features.cdd_base_c, 0)
-    sd = lambda a: float(np.nanstd(a)) or 1.0  # noqa: E731
+
+    def std_or_one(values: np.ndarray) -> float:
+        return float(np.nanstd(values)) or 1.0  # avoid dividing by zero for a constant column
+
     return Scaler(
-        float(np.nanmean(load)),
-        sd(load),
-        [float(np.nanmean(obs[:, j])) for j in range(obs.shape[1])],
-        [sd(obs[:, j]) for j in range(obs.shape[1])],
-        float(np.nanmean(hdd)),
-        sd(hdd),
-        float(np.nanmean(cdd)),
-        sd(cdd),
+        load_mean=float(np.nanmean(load)),
+        load_std=std_or_one(load),
+        w_mean=[float(np.nanmean(obs[:, j])) for j in range(obs.shape[1])],
+        w_std=[std_or_one(obs[:, j]) for j in range(obs.shape[1])],
+        hdd_mean=float(np.nanmean(hdd)),
+        hdd_std=std_or_one(hdd),
+        cdd_mean=float(np.nanmean(cdd)),
+        cdd_std=std_or_one(cdd),
     )
 
 
@@ -130,6 +135,11 @@ class HourlyBase:
 def fut_features(
     zf: ZoneFrame, o: Origins, sc: Scaler, use_weather: bool = True
 ) -> tuple[torch.Tensor, torch.Tensor]:
+    """Standardised known-ahead features for the 24 target hours of every origin.
+
+    Returns (continuous features of shape (n, 24, len(FUT_NAMES)), calendar indices (n, 24, 3)).
+    The column order must match FUT_NAMES.
+    """
     n = len(o)
     cols = []
     for v in WEATHER_VARS:
@@ -141,10 +151,18 @@ def fut_features(
     cols += [o.fut["holiday_share"], o.fut["bridge_day"], o.fut["christmas_period"]]
     ang = 2 * np.pi * o.fut["doy"] / 365.25
     cols += [np.sin(ang), np.cos(ang)]
-    ls = lambda a: (a - sc.load_mean) / sc.load_std  # noqa: E731
-    cols += [ls(o.fut["lag168"]), ls(o.fut["latest_same_hour"]), ls(o.fut["lag48"])]
+
+    def scale_load(values: np.ndarray) -> np.ndarray:
+        return (values - sc.load_mean) / sc.load_std
+
+    cols += [
+        scale_load(o.fut["lag168"]),
+        scale_load(o.fut["latest_same_hour"]),
+        scale_load(o.fut["lag48"]),
+    ]
+    # Per-origin summary numbers are repeated for each of the 24 target hours.
     for k in ("last_obs_load", "load_mean24"):
-        cols.append(np.repeat(ls(o.ctx[k])[:, None], 24, axis=1))
+        cols.append(np.repeat(scale_load(o.ctx[k])[:, None], 24, axis=1))
     j0 = 0
     cols.append(
         np.repeat(((o.ctx["temp_obs_mean24"] - sc.w_mean[j0]) / sc.w_std[j0])[:, None], 24, axis=1)
@@ -186,6 +204,16 @@ def onehot(
 
 
 class QuantileLSTM(nn.Module):
+    """LSTM encoder over the past week plus a small feed-forward decoder for the next 24 hours.
+
+    1. The LSTM reads the history window hour by hour and ends with one summary vector.
+    2. For each target hour the decoder sees that summary, the known-ahead features of the hour
+       and its calendar embeddings, and outputs three numbers.
+    3. Those numbers become the 10%, 50% and 90% quantiles. The median is predicted as a
+       correction to the most recent load at the same hour, and softplus keeps the lower
+       quantile below and the upper quantile above the median.
+    """
+
     def __init__(
         self,
         n_hist: int,
@@ -198,27 +226,34 @@ class QuantileLSTM(nn.Module):
     ):
         super().__init__()
         self.n_zones = n_zones
-        self.emb_h = nn.Linear(N_HOUR, EMB[0], bias=False)
-        self.emb_w = nn.Linear(N_WD, EMB[1], bias=False)
-        self.emb_o = nn.Linear(N_HOL, EMB[2], bias=False)
-        self.emb_z = nn.Linear(n_zones, 4, bias=False) if n_zones > 1 else None
-        e = sum(EMB) + (4 if n_zones > 1 else 0)
+        # Embeddings as bias-free linear layers on one-hot inputs (same maths as nn.Embedding,
+        # but gradients can flow to the input, which SHAP needs).
+        self.emb_h = nn.Linear(N_HOUR, EMB[0], bias=False)  # hour of day
+        self.emb_w = nn.Linear(N_WD, EMB[1], bias=False)  # weekday
+        self.emb_o = nn.Linear(N_HOL, EMB[2], bias=False)  # holiday flag
+        self.emb_z = nn.Linear(n_zones, 4, bias=False) if n_zones > 1 else None  # zone
+        emb_width = sum(EMB) + (4 if n_zones > 1 else 0)
         self.lstm = nn.LSTM(
-            n_hist + e, hidden, layers, batch_first=True, dropout=dropout if layers > 1 else 0.0
+            n_hist + emb_width,
+            hidden,
+            layers,
+            batch_first=True,
+            dropout=dropout if layers > 1 else 0.0,
         )
         self.dec = nn.Sequential(
-            nn.Linear(hidden + n_fut + e, 128),
+            nn.Linear(hidden + n_fut + emb_width, 128),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(128, n_q),
         )
 
     def embed(self, oh: torch.Tensor) -> torch.Tensor:
-        a, b = N_HOUR, N_HOUR + N_WD
+        """Split the glued one-hot vector back into its parts and embed each one."""
+        hour_end, weekday_end = N_HOUR, N_HOUR + N_WD
         parts = [
-            self.emb_h(oh[..., :a]),
-            self.emb_w(oh[..., a:b]),
-            self.emb_o(oh[..., b:CAT_W]),
+            self.emb_h(oh[..., :hour_end]),
+            self.emb_w(oh[..., hour_end:weekday_end]),
+            self.emb_o(oh[..., weekday_end:CAT_W]),
         ]
         if self.emb_z is not None:
             parts.append(self.emb_z(oh[..., CAT_W:]))
@@ -227,22 +262,28 @@ class QuantileLSTM(nn.Module):
     def forward(
         self, hist_c: torch.Tensor, hist_oh: torch.Tensor, fut_c: torch.Tensor, fut_oh: torch.Tensor
     ) -> torch.Tensor:
-        x = torch.cat([hist_c, self.embed(hist_oh)], dim=-1)
-        out, _ = self.lstm(x)
-        h = out[:, -1]
-        hf = h.unsqueeze(1).expand(-1, fut_c.shape[1], -1)
-        d = self.dec(torch.cat([hf, fut_c, self.embed(fut_oh)], dim=-1))  # (B,24,3)
-        base = fut_c[..., LATEST_IDX]
-        med = base + d[..., 1]
-        lo = med - F.softplus(d[..., 0])
-        hi = med + F.softplus(d[..., 2])
-        return torch.stack([lo, med, hi], dim=-1)
+        # Encode the history: (batch, lookback, features) -> summary of shape (batch, hidden).
+        history = torch.cat([hist_c, self.embed(hist_oh)], dim=-1)
+        lstm_out, _ = self.lstm(history)
+        summary = lstm_out[:, -1]
+
+        # Give every target hour a copy of the summary, then decode all 24 hours at once.
+        summary_per_hour = summary.unsqueeze(1).expand(-1, fut_c.shape[1], -1)
+        decoded = self.dec(torch.cat([summary_per_hour, fut_c, self.embed(fut_oh)], dim=-1))
+
+        latest_same_hour = fut_c[..., LATEST_IDX]
+        median = latest_same_hour + decoded[..., 1]
+        lower = median - F.softplus(decoded[..., 0])
+        upper = median + F.softplus(decoded[..., 2])
+        return torch.stack([lower, median, upper], dim=-1)  # (batch, 24, 3)
 
 
 def pinball_loss(pred: torch.Tensor, y: torch.Tensor, qs: tuple[float, ...]) -> torch.Tensor:
-    t = torch.tensor(qs, dtype=pred.dtype).view(1, 1, -1)
-    d = y.unsqueeze(-1) - pred
-    return torch.maximum(t * d, (t - 1.0) * d).mean()
+    """Quantile loss. For quantile q, under-predicting costs q per unit and over-predicting
+    costs (1 - q), so the 0.9 output is pushed above most observations and 0.1 below."""
+    q = torch.tensor(qs, dtype=pred.dtype).view(1, 1, -1)
+    error = y.unsqueeze(-1) - pred
+    return torch.maximum(q * error, (q - 1.0) * error).mean()
 
 
 class ZoneData:
@@ -273,15 +314,19 @@ class ZoneData:
 def make_batch(
     data: ZoneData, idx: torch.Tensor, lookback: int, n_zones: int, use_cal: bool
 ) -> tuple[torch.Tensor, ...]:
-    last = data.last[idx]
-    pos = last.unsqueeze(1) - torch.arange(lookback - 1, -1, -1).unsqueeze(0)
-    pos = pos.clamp(min=0)
-    hc = data.base.cont[pos]
-    hk = data.base.cat[pos]
-    z = torch.full((len(idx),), data.zone_idx, dtype=torch.long)
-    hoh = onehot(hk, z, n_zones, use_cal)
-    foh = onehot(data.fut_k[idx], z, n_zones, use_cal)
-    return hc, hoh, data.fut_c[idx], foh, data.y[idx]
+    """Assemble model inputs for the origins in `idx`.
+
+    Returns (history features, history one-hots, future features, future one-hots, targets).
+    The history window is the `lookback` hours ending at each origin's last observed hour.
+    """
+    last_observed = data.last[idx]
+    window = last_observed.unsqueeze(1) - torch.arange(lookback - 1, -1, -1).unsqueeze(0)
+    window = window.clamp(min=0)
+    hist_c = data.base.cont[window]
+    zone = torch.full((len(idx),), data.zone_idx, dtype=torch.long)
+    hist_oh = onehot(data.base.cat[window], zone, n_zones, use_cal)
+    fut_oh = onehot(data.fut_k[idx], zone, n_zones, use_cal)
+    return hist_c, hist_oh, data.fut_c[idx], fut_oh, data.y[idx]
 
 
 class LSTMForecaster(Forecaster):
@@ -346,64 +391,77 @@ class LSTMForecaster(Forecaster):
         assert val is not None, "early stopping needs validation origins"
         set_seed(self.seed)
         torch.set_num_threads(max(1, torch.get_num_threads()))
-        te = train_end_position(zf, self.cfg.splits.train_end)
-        self.scaler = fit_scaler(zf, te)
+
+        # Scaling statistics come from the training years only, never from validation or test.
+        train_end = train_end_position(zf, self.cfg.splits.train_end)
+        self.scaler = fit_scaler(zf, train_end)
         base = HourlyBase(zf, self.scaler, self.use_weather)
-        dtr = ZoneData(
+        train_data = ZoneData(
             zf, self._filter_excluded(train), self.scaler, use_weather=self.use_weather, base=base
         )
-        dva = ZoneData(zf, val, self.scaler, use_weather=self.use_weather, base=base)
+        val_data = ZoneData(zf, val, self.scaler, use_weather=self.use_weather, base=base)
+
         model = self._new_model()
-        opt = torch.optim.AdamW(
+        optimizer = torch.optim.AdamW(
             model.parameters(), lr=float(self.hp["lr"]), weight_decay=float(self.hp["weight_decay"])
         )
-        sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.5, patience=2)
-        gen = torch.Generator().manual_seed(self.seed)
-        best = float("inf")
-        best_state = copy.deepcopy(model.state_dict())
-        bad = 0
-        t0 = time.time()
-        bs = int(self.hp["batch_size"])
+        # Halve the learning rate when the validation loss stops improving for 2 epochs.
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
+        shuffle_rng = torch.Generator().manual_seed(self.seed)
+        batch_size = int(self.hp["batch_size"])
+
+        best_val_loss = float("inf")
+        best_weights = copy.deepcopy(model.state_dict())
+        epochs_without_improvement = 0
+        started = time.time()
         for epoch in range(int(self.hp["max_epochs"])):
             model.train()
-            tot, cnt = 0.0, 0
-            for idx in self._batches(dtr, bs, True, gen):
-                hc, hoh, fc, foh, y = make_batch(dtr, idx, self.lookback, 1, self.use_cal_emb)
-                pred = model(hc, hoh, fc, foh)
+            loss_sum, n_seen = 0.0, 0
+            for idx in self._batches(train_data, batch_size, True, shuffle_rng):
+                hist_c, hist_oh, fut_c, fut_oh, y = make_batch(
+                    train_data, idx, self.lookback, 1, self.use_cal_emb
+                )
+                pred = model(hist_c, hist_oh, fut_c, fut_oh)
                 loss = pinball_loss(pred, y, self.qs)
-                opt.zero_grad()
+                optimizer.zero_grad()
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), float(self.hp["clip"]))
-                opt.step()
-                tot += loss.item() * len(idx)
-                cnt += len(idx)
-            vloss = self._eval_loss(model, dva)
-            sched.step(vloss)
-            self.history.append({"epoch": epoch, "train_loss": tot / cnt, "val_loss": vloss})
-            log.info("%s ep %d train %.4f val %.4f", zf.zone, epoch, tot / cnt, vloss)
-            if vloss < best - 1e-5:
-                best, bad, self.best_epoch = vloss, 0, epoch
-                best_state = copy.deepcopy(model.state_dict())
+                optimizer.step()
+                loss_sum += loss.item() * len(idx)
+                n_seen += len(idx)
+            train_loss = loss_sum / n_seen
+            val_loss = self._eval_loss(model, val_data)
+            scheduler.step(val_loss)
+            self.history.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss})
+            log.info("%s ep %d train %.4f val %.4f", zf.zone, epoch, train_loss, val_loss)
+
+            # Early stopping: remember the best weights, stop after `patience` bad epochs.
+            if val_loss < best_val_loss - 1e-5:
+                best_val_loss, epochs_without_improvement, self.best_epoch = val_loss, 0, epoch
+                best_weights = copy.deepcopy(model.state_dict())
             else:
-                bad += 1
-                if bad >= int(self.hp["patience"]):
+                epochs_without_improvement += 1
+                if epochs_without_improvement >= int(self.hp["patience"]):
                     break
-        model.load_state_dict(best_state)
+        model.load_state_dict(best_weights)
         model.eval()
         self.model = model
-        self.train_seconds = time.time() - t0
-        self.best_val_loss = best
+        self.train_seconds = time.time() - started
+        self.best_val_loss = best_val_loss
         return self
 
     @torch.no_grad()
     def _eval_loss(self, model: QuantileLSTM, d: ZoneData) -> float:
         model.eval()
-        tot, cnt = 0.0, 0
+        loss_sum, n_seen = 0.0, 0
         for idx in self._batches(d, 512, False, None):
-            hc, hoh, fc, foh, y = make_batch(d, idx, self.lookback, 1, self.use_cal_emb)
-            tot += float(pinball_loss(model(hc, hoh, fc, foh), y, self.qs)) * len(idx)
-            cnt += len(idx)
-        return tot / max(cnt, 1)
+            hist_c, hist_oh, fut_c, fut_oh, y = make_batch(
+                d, idx, self.lookback, 1, self.use_cal_emb
+            )
+            pred = model(hist_c, hist_oh, fut_c, fut_oh)
+            loss_sum += float(pinball_loss(pred, y, self.qs)) * len(idx)
+            n_seen += len(idx)
+        return loss_sum / max(n_seen, 1)
 
     # -- inference ---------------------------------------------------------------------
     @torch.no_grad()
@@ -415,9 +473,12 @@ class LSTMForecaster(Forecaster):
         outs = []
         self.model.eval()
         for idx in self._batches(d, 512, False, None):
-            hc, hoh, fc, foh, _ = make_batch(d, idx, self.lookback, 1, self.use_cal_emb)
-            outs.append(self.model(hc, hoh, fc, foh).numpy())
+            hist_c, hist_oh, fut_c, fut_oh, _ = make_batch(
+                d, idx, self.lookback, 1, self.use_cal_emb
+            )
+            outs.append(self.model(hist_c, hist_oh, fut_c, fut_oh).numpy())
         arr = np.concatenate(outs) if outs else np.zeros((0, 24, 3), dtype=np.float32)
+        # Undo the standardisation so the forecast is in MW again.
         return arr.astype(np.float64) * self.scaler.load_std + self.scaler.load_mean
 
     def predict(self, zf: ZoneFrame, o: Origins) -> np.ndarray:

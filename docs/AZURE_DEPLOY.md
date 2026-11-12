@@ -67,4 +67,4 @@ The GitHub Actions workflow `.github/workflows/ci.yml` mirrors the `test` and `b
 
 ## 6. What was and was not verified
 
-Verified locally: the same code path (artifact store, refresh, API) against the local filesystem; Azurite results are in HANDOFF.md. Not verified: Bicep compilation, `what-if`, deployment, the managed identity role assignment, both pipelines, GHCR pushes.
+Verified locally: the same code path (artifact store, refresh, API) against the local filesystem; the full stack was also run against Azurite in Docker. Not verified: Bicep compilation, `what-if`, deployment, the managed identity role assignment, both pipelines, GHCR pushes.
