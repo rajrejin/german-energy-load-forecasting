@@ -68,7 +68,7 @@ flowchart LR
 
 ## Running it
 
-Python 3.11+, CPU is enough.
+Python 3.12+ (the pinned requirements need it), CPU is enough.
 
 ```bash
 pip install -r requirements.txt && pip install -e .

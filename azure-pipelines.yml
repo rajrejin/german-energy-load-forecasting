@@ -13,7 +13,7 @@ variables:
   - name: imageName
     value: energy-api
   - name: pythonVersion
-    value: '3.11'
+    value: '3.12'
 
 stages:
   - stage: test
